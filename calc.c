@@ -43,8 +43,9 @@ double calc(char* eq) {
   //	//parsed = parse(eq);
   //	parse(eq, parsed);
   //	printf("\nparsed: %s\n", eq);
-  double res = calculate("3*5-2/2+1-3");  // 2 -> (1*2)-(3/3)+1
+  double res = calculate("1/2/3+4*5*6");  // 2 -> (1*2)-(3/3)+1
   printf("\ncalc in: %lf\n", res);
+  return 0;
 }
 
 static int idx = 0;
@@ -58,7 +59,7 @@ void parse(char* eq, char* res) {
   for (int i = 0; i < len; i++) {
     if (eq[i] == '(') {
       brac++;
-      seg = i;	// index of our last opening brace
+      seg = i;  // index of our last opening brace
       printf("\nsegment: %i\n", seg);
     }
 
@@ -77,9 +78,9 @@ void parse(char* eq, char* res) {
        * it was inside of braces*/
       brac--;
       for (int j = seg + 1; j < i; j++) {
-	res[idx] = eq[j];
-	eq[j - 1] = '_';
-	idx++;
+        res[idx] = eq[j];
+        eq[j - 1] = '_';
+        idx++;
       }
       eq[i - 1] = '_';
       eq[i] = '_';  // getting rid of the "?)"
@@ -106,6 +107,9 @@ void parse(char* eq, char* res) {
   // return res;
 }
 char list[] = {'/', '*', '+', '-'};
+int list_len = 4;
+
+int find_next_symbol(int start, char* eq);
 
 double calculate(char* eq) {  // especially this fn dont have to parse braces
   /* 3*5-2/2+1-3 */
@@ -114,68 +118,116 @@ double calculate(char* eq) {  // especially this fn dont have to parse braces
   int len = strlen(eq);
   int last_symb = -1;  // no symbol by start so indx starts from 0
   int next = -1;
+  char buff[100];
   for (int i = 0; i < len; i++) {
-    for (int j = i + 1; j < len; j++) {
+    for (int j = i + 1; j < len;
+         j++) {  // This will be replaced by find_next_symbol
       // if any symbol it is next
       for (int k = 0; k < sizeof(list) / sizeof(char); k++) {
-	if (eq[j] == list[k]) {
-	  next = j;  // used to be i
-	  goto evalmd;
-	}
+        if (eq[j] == list[k]) {
+          next = j;  //
+          goto evalmd;
+        }
       }
     }
     next = -1;
   evalmd:  // mutliplication + division
     if (eq[i] == '/' || eq[i] == '*') {
-      if (next != -1) {
-	for (int j = last_symb + 1; j < next; j++) {
-	  printf("%c", eq[j]);	//
-	}
+    int further = 0;
+      if (eq[next] == '*' || eq[next] == '/') {
+        do {
+          further = find_next_symbol(next + 2, eq);
+          if (further == -1) {
+            break;
+          }
+        }
+        while (eq[further] == '*' || // This searchs symbols after the next symbol
+               eq[further] == '/');  // it is two because we dont want to search the number
+                                                            // after the symbol: 3*2*42/2 -> after the second '*' 
+                                                            // there has to be a number (42)
+        // now we have + or - after / and *
+        // so we can calculate whole result from left to right till that index (further)
+        // 3*5-2/2*5-3*4/2
+        if (further == -1) {
+          further = len;
+        }
+//        for (int k = i; k < further; k++) {
+//          printf("%c",eq[k]);
+//        }
+        printf("\n");
+        char buffer[100] = { 0 };
+        for (int k = last_symb + 1; k < further; k++) {
+          buffer[k] = eq[k];
+        }
+        printf("\nbuffer: %s\n", buffer);
       } else {
-	for (int j = last_symb + 1; j < len; j++) {
-	  printf("%c", eq[j]);	//
-	}
+        if (next != -1) {
+          for (int j = last_symb + 1; j < next; j++) {
+            buff[j - last_symb - 1] = eq[j];
+            printf("%c", eq[j]);  //
+          }
+        } else {
+          for (int j = last_symb + 1; j < len; j++) {
+            buff[j - last_symb - 1] = eq[j];
+            printf("%c", eq[j]);  //
+          }
+        }
+        last_symb = i;
       }
-      last_symb = i;
     }
+    // 3*5-2/2+1-3
     //		evalas://addition + substraction
     if (eq[i] == '+' || eq[i] == '-') {
       //				if(next != -1){
       //					for(int
-      //j=last_symb+1;j<next;j++){ 						printf("%c", eq[j]);//
+      // j=last_symb+1;j<next;j++){
+      // printf("%c", eq[j]);//
       //					}
       //				} else {
       //					for(int
-      //j=last_symb+1;j<len;j++){ 						printf("%c", eq[j]);//
+      // j=last_symb+1;j<len;j++){
+      // printf("%c", eq[j]);//
       //					}
       //				}
       last_symb = i;
     }
   }
+  return 0;
+}
+int find_next_symbol(int start, char* eq) {
+  int len = strlen(eq);
+  for (int i = start; i < len; i++) {
+    for (int j = 0; j < list_len; j++) {
+      if (eq[i] == list[j]) {
+        return i;
+      }
+    }
+  }
+  return -1;  // not found
 }
 
 double single(char* ex) {  // this represents a single expression. like 3*7 but
-			   // it could be anything!
+                           // it could be anything!
   char left[100] = {0}, right[100] = {0};
   char exp;
   int len = strlen(ex);
   for (int i = 0; i < len; i++) {
     for (int j = 0; j < sizeof(symb_list) / sizeof(char); j++) {
       if (ex[i] == symb_list[j]) {
-	for (int k = 0; k < i; k++) {
-	  left[k] = ex[k];
-	  printf("%c", ex[k]);
-	  //					switch(symb_list[j]){
-	  //						case '+':
-	  //					}
-	}
-	printf(" ");
-	for (int k = i + 1; k < len; k++) {
-	  right[k - i - 1] = ex[k];
-	  printf("%c", ex[k]);
-	}
-	exp = ex[i];
-	goto casting;
+        for (int k = 0; k < i; k++) {
+          left[k] = ex[k];
+          printf("%c", ex[k]);
+          //					switch(symb_list[j]){
+          //						case '+':
+          //					}
+        }
+        printf(" ");
+        for (int k = i + 1; k < len; k++) {
+          right[k - i - 1] = ex[k];
+          printf("%c", ex[k]);
+        }
+        exp = ex[i];
+        goto casting;
       }
     }
   }
