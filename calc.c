@@ -80,11 +80,11 @@ void parse(char* eq, char* res) {
       brac--;
       for (int j = seg + 1; j < i; j++) {
         res[idx] = eq[j];
-        eq[j - 1] = '_';
+        eq[j - 1] = ' '; // CHANGED !!! _ -> ' '
         idx++;
       }
-      eq[i - 1] = '_';
-      eq[i] = '_';  // getting rid of the "?)"
+      eq[i - 1] = ' ';
+      eq[i] = ' ';  // getting rid of the "?)"
 
       double calc = calculate(res);
       printf("\ninner clac:%lf", calc);
@@ -196,9 +196,22 @@ double calculate(char* eq) {  // especially this fn dont have to parse braces
   }
   return 0;
 }
-int find_next_symbol(int start, char* eq) {
+int find_former_symbol(int start, char* eq) {
   int len = strlen(eq);
   assert(start <= len); // start cannot be greater than len
+  for (int i = start; i > 0; i--) {
+    for (int j = 0; j < list_len; j++) {
+      if (eq[i] == list[j]) {
+        return i;
+      }
+    }
+  }
+  return -1;  // not found
+}
+
+
+int find_next_symbol(int start, char* eq) {
+  int len = strlen(eq);
   for (int i = start; i < len; i++) {
     for (int j = 0; j < list_len; j++) {
       if (eq[i] == list[j]) {
@@ -214,7 +227,7 @@ double single(char* ex) {  // this represents a single expression. like 3*7 but
   char left[100] = {0}, right[100] = {0};
   char exp;
   int len = strlen(ex);
-  for (int i = 0; i < len; i++) {
+  for (int i = len; i > 0; i--) {
     for (int j = 0; j < sizeof(symb_list) / sizeof(char); j++) {
       if (ex[i] == symb_list[j]) {
         for (int k = 0; k < i; k++) {
@@ -252,7 +265,8 @@ casting:
       //				result = nleft+nright;
       //				break;
     default:
-      printf("error");
+      perror("ERROR-01: Invalid expression! ");
+      abort();
       break;
   }
   return result;
@@ -264,6 +278,7 @@ void get_input(char* buff) {
   scanf("%s", buff);
   buff[strcspn(buff, "\n")] = '\0';
 }
+
 void print(char* buff, int start, int end) {
   for (int i = start; i < end; i++) {
     printf("%c", buff[i]);
@@ -276,6 +291,39 @@ void copy(char* from, int start, int end, char* to) {
     to[i - start] = from[i];
   }
 }
+
+// inefficient
+void clear_copy(char* from, int start_from, int end_from, int start_to, int end_to, char* to) { 
+  /*assert((end_from - start_from) <= (end_to - start_to));*/
+
+  for (int i = 0; i < end_to - start_to; i++) {
+    to[start_to + i] = ' ';
+  }
+  for (int i = 0; i < end_from - start_from; i++) {
+    to[start_to + i] = from[start_from + i];
+  }
+}
+// int diff = start_from - start_to;
+//  for (int i = 0; i < diff; i++) { // basically this means length
+//    to[start_to + i] = from[start_from + i];
+//  }
+//  diff = abs( ( start_from - end_from ) - ( start_to - end_to ) ) + diff ; // adding length
+//  for (int i = 0; i < diff; i++) {
+//    to[start_to + i] = ' ';
+//  }
+
+bool has_any(char symbols[], char* list) {
+  int len = strlen(list);
+  for (int i = 0; i < len; i++) {
+    for (int j = 0; j < sizeof(*symbols) / sizeof(char); j++) {
+      if (list[i] == symbols[j]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // karuso
 // boh rap
 // halelua
