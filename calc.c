@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 const char symb_list[] = {'+', '-', '/', '*', '^', '(', ')'};
 
@@ -16,18 +17,18 @@ void get_input(char* buff);
 double calc(char* eq);
 double single(char* ex);
 
-int main() {
-  char eq[100] = {0};
-  do {
-    /* 3x(4+7-1)x2-2/2 */
-    printf("Eq: ");
-    get_input(eq);
-    double res = calc(eq);
-    printf("Result: %lf\n", res);
-    // double sres = single("1234*5678");
-  } while (1);
-  return 0;
-}
+/*int main() {*/
+  /*char eq[100] = {0};*/
+  /*do {*/
+     /*3x(4+7-1)x2-2/2 */
+    /*printf("Eq: ");*/
+    /*get_input(eq);*/
+    /*double res = calc(eq);*/
+    /*printf("Result: %lf\n", res);*/
+     /*double sres = single("1234*5678");*/
+  /*} while (1);*/
+  /*return 0;*/
+/*}*/
 
 void parse(char* eq, char* res);
 double calculate(char* eq);
@@ -119,6 +120,7 @@ double calculate(char* eq) {  // especially this fn dont have to parse braces
   int last_symb = -1;  // no symbol by start so indx starts from 0
   int next = -1;
   char buff[100];
+
   for (int i = 0; i < len; i++) {
     for (int j = i + 1; j < len;
          j++) {  // This will be replaced by find_next_symbol
@@ -196,6 +198,7 @@ double calculate(char* eq) {  // especially this fn dont have to parse braces
 }
 int find_next_symbol(int start, char* eq) {
   int len = strlen(eq);
+  assert(start <= len); // start cannot be greater than len
   for (int i = start; i < len; i++) {
     for (int j = 0; j < list_len; j++) {
       if (eq[i] == list[j]) {
@@ -216,15 +219,12 @@ double single(char* ex) {  // this represents a single expression. like 3*7 but
       if (ex[i] == symb_list[j]) {
         for (int k = 0; k < i; k++) {
           left[k] = ex[k];
-          printf("%c", ex[k]);
           //					switch(symb_list[j]){
           //						case '+':
           //					}
         }
-        printf(" ");
         for (int k = i + 1; k < len; k++) {
           right[k - i - 1] = ex[k];
-          printf("%c", ex[k]);
         }
         exp = ex[i];
         goto casting;
@@ -232,7 +232,6 @@ double single(char* ex) {  // this represents a single expression. like 3*7 but
     }
   }
 casting:
-  printf("\nleft: %s\nright: %s\nexpression: %c\n", left, right, exp);
   int nleft = atoi(left);
   int nright = atoi(right);
   int result = 0;
@@ -252,9 +251,11 @@ casting:
       //			case '+':
       //				result = nleft+nright;
       //				break;
+    default:
+      printf("error");
+      break;
   }
-  printf("general result: %i\n", result);
-  return 0;
+  return result;
 }
 
 void get_input(char* buff) {
@@ -262,6 +263,18 @@ void get_input(char* buff) {
   // fgets(buff,len,stdin);
   scanf("%s", buff);
   buff[strcspn(buff, "\n")] = '\0';
+}
+void print(char* buff, int start, int end) {
+  for (int i = start; i < end; i++) {
+    printf("%c", buff[i]);
+  }
+  printf("\n");
+}
+
+void copy(char* from, int start, int end, char* to) {
+  for (int i = start; i < end; i++) {
+    to[i - start] = from[i];
+  }
 }
 // karuso
 // boh rap
